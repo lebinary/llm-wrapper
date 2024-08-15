@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "openai-wrapper"
+name = "llm-wrapper"
 version = "0.1.0"
 description = ""
 authors = ["Binh Le <lebinh190998@gmail.com>"]
@@ -9,8 +9,10 @@ readme = "README.md"
 python = "^3.11"
 fastapi = "^0.112.0"
 uvicorn = "^0.30.6"
-pandasai = "^2.2.14"
 httpx = "^0.27.0"
+pandasai = "^2.2.14"
+numpy = "1.26.4"
+pyyaml = "^6.0.2"
 
 [tool.pyright]
 venvPath = "."

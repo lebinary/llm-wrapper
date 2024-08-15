@@ -83,3 +83,7 @@ pytest.ini
 #.Trashes
 #ehthumbs.db
 #Thumbs.db
+
+# PandasAi
+/cache
+/exports
