@@ -1,24 +1,12 @@
-from fastapi import FastAPI, APIRouter
-from app.models.llm_strategies import OpenAIStrategy, ClaudeStrategy
-from app.models.Llm import LLM
+from fastapi import FastAPI, APIRouter, Depends, File, UploadFile
+from typing import List, Any
+from app.services.llm import get_llm_agent
 
 router = APIRouter()
 
-@router.get("/openai")
-async def openai_llm():
-    openai_strategy = OpenAIStrategy(api_key="your_openai_api_key")
-    llm = LLM(openai_strategy)
-
-    response = await llm.generate_text("Hello, world!")
-
-    return response
-
-@router.get("/claude")
-async def claude_llm():
-    claude_strategy = ClaudeStrategy(api_key="your_openai_api_key")
-    llm = LLM(claude_strategy)
-
-    response = await llm.generate_text("Hello, world!")
+@router.post("/chat")
+async def llm_chat(prompt: str, llm_agent=Depends(get_llm_agent)) -> str:
+    response = await llm_agent.chat(prompt)
 
     return response
 
