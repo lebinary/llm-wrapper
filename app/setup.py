@@ -6,6 +6,7 @@ from typing import List, Optional
 import importlib
 import os
 import sys
+from dotenv import load_dotenv
 
 def discover_modules(directory: str = 'app/routes') -> list[str]:
     module_names = []
@@ -31,7 +32,7 @@ def app_init() -> FastAPI:
     logger.info("Initializing app")
 
     app = FastAPI(
-        title="openai-wrapper",
+        title="llm-wrapper",
         debug=False
     )
 
@@ -46,6 +47,7 @@ def app_init() -> FastAPI:
     app.state.async_client = httpx.AsyncClient()
 
     # db.init_app(app)
+    load_dotenv()
     load_modules(app)
 
     @app.on_event("shutdown")
