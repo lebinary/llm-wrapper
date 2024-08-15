@@ -12,6 +12,9 @@ uvicorn = "^0.30.6"
 pandasai = "^2.2.14"
 httpx = "^0.27.0"
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
 
 [build-system]
 requires = ["poetry-core"]
