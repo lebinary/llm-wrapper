@@ -6,7 +6,7 @@ from typing import List, Optional
 import importlib
 import os
 import sys
-from dotenv import load_dotenv
+from app.database import init_db
 
 def discover_modules(directory: str = 'app/routes') -> list[str]:
     module_names = []
@@ -46,8 +46,7 @@ def app_init() -> FastAPI:
     )
     app.state.async_client = httpx.AsyncClient()
 
-    # db.init_app(app)
-    load_dotenv()
+    init_db()
     load_modules(app)
 
     @app.on_event("shutdown")
