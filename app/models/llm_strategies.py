@@ -6,12 +6,13 @@ from pandasai.llm import OpenAI
 import pandas as pd
 from fastapi import File
 from app.logger import logger
-from typing import Optional, Type
+from typing import Optional, Type, Union
 from pandasai.pipelines.chat.generate_chat_pipeline import GenerateChatPipeline
+from pandas import DataFrame
 
 class LLMStrategy(ABC):
     @abstractmethod
-    async def chat(self, prompt: Any) -> str:
+    async def chat(self, prompt: str) -> Any:
         pass
 
 class OpenAIStrategy(LLMStrategy):
@@ -32,7 +33,6 @@ class OpenAIStrategy(LLMStrategy):
             }
         )
 
-    async def chat(self, prompt: str) -> str:
+    async def chat(self, prompt: str) -> Union[str, int, float, DataFrame]:
         response = self.agent.chat(prompt)
-        logger.info(f"RESPONSE: {response}")
         return response
