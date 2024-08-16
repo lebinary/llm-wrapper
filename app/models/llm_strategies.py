@@ -3,7 +3,6 @@ from typing import List, Dict, Any
 import os
 from pandasai import Agent
 from pandasai.llm import OpenAI
-import pandas as pd
 from fastapi import File
 from app.logger import logger
 from typing import Optional, Type, Union
@@ -16,19 +15,14 @@ class LLMStrategy(ABC):
         pass
 
 class OpenAIStrategy(LLMStrategy):
-    def __init__(self, pipeline: Optional[Type[GenerateChatPipeline]] = None):
-        llm = OpenAI(api_token=os.environ.get("OPEN_API_KEY"))
-        df = pd.DataFrame({
-            "brand": ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"],
-            "region": ["North America", "North America", "North America", "North America", "North America", "Europe", "Europe", "Europe", "Europe", "Europe"],
-            "sales": [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-        })
+    def __init__(self, df: DataFrame, pipeline: Optional[Type[GenerateChatPipeline]] = None):
+        openai_llm = OpenAI(api_token=os.environ.get("OPEN_API_KEY"))
 
         self.agent = Agent(
             df,
             pipeline=pipeline,
             config={
-                "llm": llm,
+                "llm": openai_llm,
                 "verbose": True
             }
         )

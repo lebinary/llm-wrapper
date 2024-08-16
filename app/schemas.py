@@ -1,7 +1,8 @@
-from typing import Union, Any
+from typing import Union, Any, Optional, List
 from pandas import DataFrame
 from pydantic import BaseModel, Field, validator
 import json
+from datetime import datetime
 
 class ReturnResult(BaseModel):
     value: Any
@@ -29,3 +30,50 @@ class ReturnResult(BaseModel):
 
     def json(self, *args, **kwargs):
         return json.dumps(self.dict(*args, **kwargs))
+
+class _BasePrompt(BaseModel):
+    content: str
+    response: Optional[str] = None
+    rating: Optional[int] = Field(None, ge=1, le=5)
+
+class ReturnPrompt(_BasePrompt):
+    id: int
+    conversation_id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+class CreatePrompt(_BasePrompt):
+    pass
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "content": "Whats the best sales?"
+            }
+        }
+
+
+
+class _BaseConversation(BaseModel):
+    title: str
+
+class ReturnConversation(_BaseConversation):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    prompts: List[ReturnPrompt] = []
+
+    class Config:
+        from_attributes = True
+
+class CreateConversation(_BaseConversation):
+    pass
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "title": "Anylyze sale data"
+            }
+        }
