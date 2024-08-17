@@ -55,7 +55,6 @@ class PromptCreate(_BasePrompt):
         }
 
 
-
 class _BaseConversation(BaseModel):
     title: str
 

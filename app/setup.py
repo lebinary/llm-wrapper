@@ -6,7 +6,12 @@ from typing import List, Optional
 import importlib
 import os
 import sys
-from app.database import init_db
+from app.database import init_db, init_async_db
+import asyncio
+
+async def initialize_databases():
+    await init_async_db()
+    init_db()
 
 def discover_modules(directory: str = 'app/routes') -> list[str]:
     module_names = []
@@ -46,8 +51,11 @@ def app_init() -> FastAPI:
     )
     app.state.async_client = httpx.AsyncClient()
 
-    init_db()
-    load_modules(app)
+    @app.on_event("startup")
+    async def startup_event():
+        logger.info("Starting async client.")
+        await initialize_databases()
+        load_modules(app)
 
     @app.on_event("shutdown")
     async def shutdown_event():

@@ -87,3 +87,6 @@ pytest.ini
 # PandasAi
 /cache
 /exports
+
+# filesystem
+/uploads
