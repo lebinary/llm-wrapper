@@ -2,9 +2,9 @@ from app.logger import logger
 from sqlalchemy.orm import Session
 from app.db_models import Conversation
 from typing import List
-from app.schemas import CreateConversation
+from app.schemas import ConversationCreate
 
-async def create_conversation(conversation: CreateConversation, db: Session) -> Conversation:
+async def create_conversation(conversation: ConversationCreate, db: Session) -> Conversation:
     conversation = Conversation(**conversation.dict())
     db.add(conversation)
     db.commit()

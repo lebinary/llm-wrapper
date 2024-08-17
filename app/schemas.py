@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field, validator
 import json
 from datetime import datetime
 
-class ReturnResult(BaseModel):
+class ChatReturn(BaseModel):
     value: Any
 
     class Config:
@@ -36,7 +36,7 @@ class _BasePrompt(BaseModel):
     response: Optional[str] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
 
-class ReturnPrompt(_BasePrompt):
+class PromptReturn(_BasePrompt):
     id: int
     conversation_id: int
     created_at: datetime
@@ -44,7 +44,7 @@ class ReturnPrompt(_BasePrompt):
     class Config:
         from_attributes = True
 
-class CreatePrompt(_BasePrompt):
+class PromptCreate(_BasePrompt):
     pass
 
     class Config:
@@ -59,16 +59,16 @@ class CreatePrompt(_BasePrompt):
 class _BaseConversation(BaseModel):
     title: str
 
-class ReturnConversation(_BaseConversation):
+class ConversationReturn(_BaseConversation):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    prompts: List[ReturnPrompt] = []
+    prompts: List[PromptReturn] = []
 
     class Config:
         from_attributes = True
 
-class CreateConversation(_BaseConversation):
+class ConversationCreate(_BaseConversation):
     pass
 
     class Config:

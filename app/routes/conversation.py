@@ -8,9 +8,9 @@ from app.services.conversation import (
 from app.models.LLMAgent import get_llm_agent
 from app.logger import logger
 from app.schemas import (
-    ReturnResult,
-    ReturnConversation,
-    CreateConversation
+    ChatReturn,
+    ConversationReturn,
+    ConversationCreate
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -36,11 +36,11 @@ from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 
 router = APIRouter()
 
-@router.post("/", response_model=ReturnConversation, status_code=HTTP_201_CREATED)
+@router.post("/", response_model=ConversationReturn, status_code=HTTP_201_CREATED)
 async def create_new_conversation(
-    conversation: CreateConversation = Body(...),
+    conversation: ConversationCreate = Body(...),
     db: Session = Depends(get_db)
-) -> ReturnConversation:
+) -> ConversationReturn:
     try:
         new_conversation = await create_conversation(conversation=conversation, db=db)
         return new_conversation
@@ -54,11 +54,11 @@ async def create_new_conversation(
             status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error occurred")
 
 
-@router.get("/", response_model=List[ReturnConversation], status_code=HTTP_200_OK)
-async def list_conversations(db: Session = Depends(get_db)) -> List[ReturnConversation]:
+@router.get("/", response_model=List[ConversationReturn], status_code=HTTP_200_OK)
+async def list_conversations(db: Session = Depends(get_db)) -> List[ConversationReturn]:
     try:
         conversations = await get_conversations(db=db)
-        return [ReturnConversation.from_orm(c) for c in conversations]
+        return [ConversationReturn.from_orm(c) for c in conversations]
     except SQLAlchemyError as e:
         logger.exception("Database error occurred while getting conversations")
         raise HTTPException(
@@ -69,8 +69,8 @@ async def list_conversations(db: Session = Depends(get_db)) -> List[ReturnConver
             status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error occurred")
 
 
-@router.get("/{conversation_id}", response_model=List[ReturnConversation], status_code=HTTP_200_OK)
-async def get_conversation(conversation_id: int, db: Session = Depends(get_db)) -> ReturnConversation:
+@router.get("/{conversation_id}", response_model=List[ConversationReturn], status_code=HTTP_200_OK)
+async def get_conversation(conversation_id: int, db: Session = Depends(get_db)) -> ConversationReturn:
     try:
         conversation = await get_conversation_by_id(conversation_id=conversation_id,db=db)
         return conversation
@@ -88,9 +88,9 @@ async def get_conversation(conversation_id: int, db: Session = Depends(get_db)) 
             status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Unknown error occurred")
 
 @router.post("/chat")
-async def llm_chat(prompt: str, llm_agent=Depends(get_llm_agent)) -> ReturnResult:
+async def llm_chat(prompt: str, llm_agent=Depends(get_llm_agent)) -> ChatReturn:
     result = await llm_agent.chat(prompt)
-    return ReturnResult(value=result)
+    return ChatReturn(value=result)
 
 def init_app(app: FastAPI):
     app.include_router(router, prefix="/conversations", tags=["conversations"])
