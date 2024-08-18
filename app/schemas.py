@@ -65,7 +65,7 @@ class ConversationReturn(_BaseConversation):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    prompts: List[PromptReturn] = []
+    prompts: Optional[List[PromptReturn]] = None
 
     class Config:
         from_attributes = True
