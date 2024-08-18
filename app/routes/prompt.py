@@ -13,7 +13,8 @@ from app.services.agent import get_or_create_llm_agent
 from app.logger import logger
 from app.schemas import (
     PromptUpdate,
-    PromptReturn
+    PromptReturn,
+    RatingBody
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -45,12 +46,12 @@ router = APIRouter()
 @router.post("/{prompt_id}/rating", response_model=PromptReturn, status_code=HTTP_200_OK)
 def rate_conversation(
     prompt_id: int,
-    rating: int,
+    body: RatingBody = Body(...),
     db: Session = Depends(get_db)
 ) -> PromptReturn:
     try:
         prompt = get_prompt_by_id(prompt_id, db=db)
-        updated_prompt = update_prompt(prompt, prompt_data=PromptUpdate(rating=rating), db=db)
+        updated_prompt = update_prompt(prompt, prompt_data=PromptUpdate(rating=body.rating), db=db)
 
         return PromptReturn.from_orm(updated_prompt)
     except NoResultFound as e:

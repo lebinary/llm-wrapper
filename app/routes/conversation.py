@@ -12,12 +12,13 @@ from app.services.conversation import (
 from app.services.agent import get_or_create_llm_agent
 from app.logger import logger
 from app.schemas import (
-    ChatReturn,
     ConversationReturn,
     ConversationCreate,
     PromptCreate,
     PromptReturn,
-    PromptUpdate
+    PromptUpdate,
+    ChatBody,
+    UploadBody
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -103,16 +104,15 @@ def get_conversation(conversation_id: int, db: Session = Depends(get_db)) -> Con
 
 @router.post("/upload", response_model=ConversationReturn, status_code=HTTP_201_CREATED)
 async def upload_files(
-    conversation_id: Optional[int] = Query(None, description="Existing conversation ID. If not provided, a new conversation will be created."),
-    title: Optional[str] = Query(None, description="Title for the new conversation if one is being created."),
+    body: UploadBody = Body(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ) -> ConversationReturn:
     try:
         # Create a new conversation if none provided
-        updload_conversation_id = conversation_id
+        updload_conversation_id = body.conversation_id
         if updload_conversation_id is None:
-            new_conversation_title = title or (filename_to_conversation_title(files[0].filename) if files[0].filename else "New Conversation")
+            new_conversation_title = body.title or (filename_to_conversation_title(files[0].filename) if files[0].filename else "New Conversation")
             new_conversation = create_conversation(ConversationCreate(title=new_conversation_title), db)
             updload_conversation_id = new_conversation.id
 
@@ -129,14 +129,14 @@ async def upload_files(
 @router.post("/{conversation_id}/chat", response_model=PromptReturn, status_code=HTTP_200_OK)
 async def llm_chat(
     conversation_id: int,
-    prompt_chat: str,
+    body: ChatBody = Body(...),
     db: AsyncSession = Depends(get_async_db)
 ) -> PromptReturn:
     try:
-        new_prompt = await async_create_prompt(PromptCreate(content=prompt_chat, conversation_id=conversation_id, rating=None), db)
+        new_prompt = await async_create_prompt(PromptCreate(content=body.prompt_chat, conversation_id=conversation_id, rating=None), db)
 
         llm_agent = await get_or_create_llm_agent(conversation_id, db)
-        llm_response = await llm_agent.chat(prompt_chat)
+        llm_response = await llm_agent.chat(body.prompt_chat)
 
         # Convert the response to a JSON-serializable format
         if isinstance(llm_response, str):
@@ -147,7 +147,7 @@ async def llm_chat(
             try:
                 json_response = {"json": json.loads(json.dumps(llm_response))}
             except (TypeError, json.JSONDecodeError):
-                raise ValueError(f"Unable to serialize llm_response of type {type(llm_response)}")
+                json_response = {"text": str(llm_response)}
 
         updated_prompt = await async_update_prompt(new_prompt, prompt_data=PromptUpdate(response=json_response), db=db)
 
@@ -155,9 +155,6 @@ async def llm_chat(
     except NoResultFound as e:
         logger.exception("Record not found while getting conversation")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Record not found")
-    except ValueError as e:
-        logger.exception("Error while serializing response from llm")
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while chatting with llm")
     except Exception as e:
         logger.exception("Error occurred while chatting with llm")
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while chatting with llm")

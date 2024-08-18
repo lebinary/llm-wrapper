@@ -4,31 +4,15 @@ from pydantic import BaseModel, Field, validator
 import json
 from datetime import datetime
 
-class ChatReturn(BaseModel):
-    value: Any
+class UploadBody(BaseModel):
+    conversation_id: Optional[int] = None
+    title: Optional[str] = None
 
-    class Config:
-        arbitrary_types_allowed = True
-        json_schema_extra = {
-            "example": {
-                "value": "The answer is yes",
-            }
-        }
+class ChatBody(BaseModel):
+    prompt_chat: str
 
-    @validator('value')
-    def serialize_dataframe(cls, v):
-        if isinstance(v, DataFrame):
-            return v.to_dict(orient='records')
-        return v
-
-    def dict(self, *args, **kwargs):
-        d = super().dict(*args, **kwargs)
-        if isinstance(d['value'], DataFrame):
-            d['value'] = d['value'].to_dict(orient='records')
-        return d
-
-    def json(self, *args, **kwargs):
-        return json.dumps(self.dict(*args, **kwargs))
+class RatingBody(BaseModel):
+    rating: int
 
 class _BasePrompt(BaseModel):
     content: str
