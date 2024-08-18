@@ -21,7 +21,6 @@ async def get_or_create_llm_agent(conversation_id: int, db: AsyncSession) -> LLM
             conversation = await get_conversation_with_files(conversation_id, db)
 
             file_paths: List[str] = [file.path for file in conversation.files]
-            logger.info("CONVERSATION FILES: ", file_paths)
             llm_agent = await LLMAgent.create(
                 file_paths,
                 strategy=OpenAIStrategy(),
