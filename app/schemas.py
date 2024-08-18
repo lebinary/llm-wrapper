@@ -33,7 +33,7 @@ class ChatReturn(BaseModel):
 class _BasePrompt(BaseModel):
     content: str
     conversation_id: int
-    response: Optional[str] = None
+    response: Optional[dict] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
 
 class PromptReturn(_BasePrompt):
@@ -55,7 +55,7 @@ class PromptCreate(_BasePrompt):
 
 class PromptUpdate(BaseModel):
     content: Optional[str] = None
-    response: Optional[str] = None
+    response: Optional[dict] = None
     rating: Optional[int] = Field(default=None, ge=1, le=5)
 
 class _BaseConversation(BaseModel):

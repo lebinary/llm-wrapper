@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from app.database import Base
 from typing import Optional
+from sqlalchemy.dialects.postgresql import JSONB
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -22,7 +23,7 @@ class Prompt(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"), nullable=False)
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    response: Mapped[Optional[str]] = mapped_column(Text)
+    response: Mapped[Optional[dict]] = mapped_column(JSONB)
     rating: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

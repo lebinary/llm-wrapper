@@ -12,7 +12,7 @@ def orm_to_dict(orm_object):
 
 def create_update_dict(model, update_data):
     return {
-        column.key: getattr(update_data, column.key)
+        getattr(model, column.key): getattr(update_data, column.key)
         for column in model.__table__.columns
         if hasattr(update_data, column.key) and getattr(update_data, column.key) is not None
     }

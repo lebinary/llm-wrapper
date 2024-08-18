@@ -1,18 +1,18 @@
 """initial migration
 
-Revision ID: cf240e2333a9
+Revision ID: eea4f4c59f0f
 Revises: 
-Create Date: 2024-08-17 21:06:15.314627
+Create Date: 2024-08-18 17:50:55.371533
 
 """
 from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-
+from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision: str = 'cf240e2333a9'
+revision: str = 'eea4f4c59f0f'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -44,7 +44,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('conversation_id', sa.Integer(), nullable=False),
     sa.Column('content', sa.Text(), nullable=False),
-    sa.Column('response', sa.Text(), nullable=True),
+    sa.Column('response', postgresql.JSONB(astext_type=sa.Text()), nullable=True),
     sa.Column('rating', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
     sa.CheckConstraint('rating >= 1 AND rating <= 5', name='check_rating_range'),

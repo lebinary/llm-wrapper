@@ -44,6 +44,8 @@ from app.utils import orm_to_dict
 from app.db_models import Conversation
 from sqlalchemy.future import select
 from app.services.prompt import async_create_prompt, async_update_prompt
+import pandas as pd
+import json
 
 router = APIRouter()
 
@@ -124,25 +126,38 @@ async def upload_files(
         logger.exception("Error occurred while uploading files")
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while uploading files")
 
-@router.post("/{conversation_id}/chat", response_model=ChatReturn, status_code=HTTP_200_OK)
+@router.post("/{conversation_id}/chat", response_model=PromptReturn, status_code=HTTP_200_OK)
 async def llm_chat(
     conversation_id: int,
     prompt_chat: str,
     db: AsyncSession = Depends(get_async_db)
-) -> ChatReturn:
+) -> PromptReturn:
     try:
         new_prompt = await async_create_prompt(PromptCreate(content=prompt_chat, conversation_id=conversation_id, rating=None), db)
 
         llm_agent = await get_or_create_llm_agent(conversation_id, db)
         llm_response = await llm_agent.chat(prompt_chat)
 
-        str_llm_response = str(llm_response)
-        updated_prompt = await async_update_prompt(new_prompt, prompt_data=PromptUpdate(response=str_llm_response), db=db)
+        # Convert the response to a JSON-serializable format
+        if isinstance(llm_response, str):
+            json_response = {"text": llm_response}
+        elif isinstance(llm_response, pd.DataFrame):
+            json_response = {"data": llm_response.to_dict(orient='records')}
+        else:
+            try:
+                json_response = {"data": json.loads(json.dumps(llm_response))}
+            except (TypeError, json.JSONDecodeError):
+                raise ValueError(f"Unable to serialize llm_response of type {type(llm_response)}")
 
-        return ChatReturn(value=str_llm_response)
+        updated_prompt = await async_update_prompt(new_prompt, prompt_data=PromptUpdate(response=json_response), db=db)
+
+        return PromptReturn.from_orm(updated_prompt)
     except NoResultFound as e:
         logger.exception("Record not found while getting conversation")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Record not found")
+    except ValueError as e:
+        logger.exception("Error while serializing response from llm")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while chatting with llm")
     except Exception as e:
         logger.exception("Error occurred while chatting with llm")
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while chatting with llm")
