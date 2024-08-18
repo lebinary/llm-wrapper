@@ -17,8 +17,7 @@ from app.schemas import (
     PromptCreate,
     PromptReturn,
     PromptUpdate,
-    ChatBody,
-    UploadBody
+    ChatBody
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -104,24 +103,17 @@ def get_conversation(conversation_id: int, db: Session = Depends(get_db)) -> Con
 
 @router.post("/upload", response_model=ConversationReturn, status_code=HTTP_201_CREATED)
 async def upload_files(
-    body: UploadBody = Body(...),
     files: List[UploadFile] = File(...),
     db: Session = Depends(get_db)
 ) -> ConversationReturn:
     try:
         # Create a new conversation if none provided
-        updload_conversation_id = body.conversation_id
-        if updload_conversation_id is None:
-            new_conversation_title = body.title or (filename_to_conversation_title(files[0].filename) if files[0].filename else "New Conversation")
-            new_conversation = create_conversation(ConversationCreate(title=new_conversation_title), db)
-            updload_conversation_id = new_conversation.id
+        new_conversation_title = filename_to_conversation_title(files[0].filename) if files[0].filename else "New Conversation"
+        new_conversation = create_conversation(ConversationCreate(title=new_conversation_title), db)
+        updload_conversation_id = new_conversation.id
 
         updated_conversation = await add_files_to_conversation(updload_conversation_id, files, db)
         return ConversationReturn.from_orm(updated_conversation)
-    except NoResultFound as e:
-        logger.exception("Record not found while getting conversation")
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND,
-                            detail="Record not found")
     except Exception as e:
         logger.exception("Error occurred while uploading files")
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while uploading files")

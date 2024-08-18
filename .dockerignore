@@ -1,0 +1,16 @@
+# Ignore the frontend folder
+/frontend
+
+# Ignore virtual env\
+venv/
+env/
+ENV/
+
+# Ignore all .log files
+*.log
+
+# Ignore all files in any directory named temp
+**/temp
+
+# Don't ignore important.log, even if it matches the above patterns
+!important.log

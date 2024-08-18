@@ -4,10 +4,6 @@ from pydantic import BaseModel, Field, validator
 import json
 from datetime import datetime
 
-class UploadBody(BaseModel):
-    conversation_id: Optional[int] = None
-    title: Optional[str] = None
-
 class ChatBody(BaseModel):
     prompt_chat: str
 

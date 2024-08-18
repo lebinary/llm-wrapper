@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  db:
+    image: llm_wrapper:db
+    build:
+      context: ./db
+      dockerfile: Dockerfile
+    container_name: postgres_db
+    env_file: .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    command: "-p ${POSTGRES_PORT}"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -p ${POSTGRES_PORT} -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      start_period: 0s
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: llm_wrapper:backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fastapi_backend
+    command: ["/bin/bash", "-c", "source scripts/run_app.sh"]
+    env_file: .env
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    image: llm_wrapper:frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: react_frontend
+    command: npm run dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    name: postgres_data

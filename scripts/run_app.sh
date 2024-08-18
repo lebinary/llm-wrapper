@@ -12,5 +12,5 @@ if [ -z "${DATABASE_URL:-}" ]; then
 fi
 
 # Start app
-poetry run alembic upgrade head
-poetry run python main.py
+alembic upgrade head
+python main.py
