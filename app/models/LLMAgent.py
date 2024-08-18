@@ -40,11 +40,6 @@ class LLMAgent:
 
         self._update_agent()
 
-    async def set_strategy(self, strategy: LLMStrategy):
-        self._strategy = strategy
-        self._data = await self._strategy.preprocess_data(self._file_paths)
-        self._update_agent()
-
     def _update_agent(self):
         if self._data is None:
             raise ValueError("No data has been loaded. Please update the data first.")
@@ -57,6 +52,11 @@ class LLMAgent:
                 "verbose": True
             }
         )
+
+    async def set_strategy(self, strategy: LLMStrategy):
+        self._strategy = strategy
+        self._data = await self._strategy.preprocess_data(self._file_paths)
+        self._update_agent()
 
     async def chat(self, prompt: str) -> Any:
         if self._data is None:
