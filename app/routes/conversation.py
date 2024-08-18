@@ -15,7 +15,9 @@ from app.schemas import (
     ChatReturn,
     ConversationReturn,
     ConversationCreate,
-    PromptReturn
+    PromptCreate,
+    PromptReturn,
+    PromptUpdate
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -41,16 +43,9 @@ from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from app.utils import orm_to_dict
 from app.db_models import Conversation
 from sqlalchemy.future import select
-
+from app.services.prompt import async_create_prompt, async_update_prompt
 
 router = APIRouter()
-
-@router.get("/async", response_model=ConversationReturn, status_code=HTTP_200_OK)
-async def async_list_conversations(db: AsyncSession = Depends(get_async_db)) -> Any:
-    query = select(Conversation).options(selectinload(Conversation.files)).filter_by(id=1)
-    result = await db.execute(query)
-    files = result.scalars().one().files
-    return [ConversationReturn(**orm_to_dict(f)) for f in files]
 
 @router.post("/", response_model=ConversationReturn, status_code=HTTP_201_CREATED)
 def create_new_conversation(
@@ -132,12 +127,25 @@ async def upload_files(
 @router.post("/{conversation_id}/chat", response_model=ChatReturn, status_code=HTTP_200_OK)
 async def llm_chat(
     conversation_id: int,
-    prompt: str,
+    prompt_chat: str,
     db: AsyncSession = Depends(get_async_db)
 ) -> ChatReturn:
-    llm_agent = await get_or_create_llm_agent(conversation_id, db)
-    result = await llm_agent.chat(prompt)
-    return ChatReturn(value=result)
+    try:
+        new_prompt = await async_create_prompt(PromptCreate(content=prompt_chat, conversation_id=conversation_id, rating=None), db)
+
+        llm_agent = await get_or_create_llm_agent(conversation_id, db)
+        llm_response = await llm_agent.chat(prompt_chat)
+
+        str_llm_response = str(llm_response)
+        updated_prompt = await async_update_prompt(new_prompt, prompt_data=PromptUpdate(response=str_llm_response), db=db)
+
+        return ChatReturn(value=str_llm_response)
+    except NoResultFound as e:
+        logger.exception("Record not found while getting conversation")
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Record not found")
+    except Exception as e:
+        logger.exception("Error occurred while chatting with llm")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while chatting with llm")
 
 def init_app(app: FastAPI):
     app.include_router(router, prefix="/conversations", tags=["conversations"])
