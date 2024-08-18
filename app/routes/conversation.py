@@ -145,7 +145,7 @@ async def llm_chat(
             json_response = {"data": llm_response.to_dict(orient='records')}
         else:
             try:
-                json_response = {"data": json.loads(json.dumps(llm_response))}
+                json_response = {"json": json.loads(json.dumps(llm_response))}
             except (TypeError, json.JSONDecodeError):
                 raise ValueError(f"Unable to serialize llm_response of type {type(llm_response)}")
 
