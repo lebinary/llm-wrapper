@@ -11,7 +11,6 @@ class ChatReturn(BaseModel):
         arbitrary_types_allowed = True
         json_schema_extra = {
             "example": {
-                "type": "string",
                 "value": "The answer is yes",
             }
         }
@@ -33,12 +32,12 @@ class ChatReturn(BaseModel):
 
 class _BasePrompt(BaseModel):
     content: str
+    conversation_id: int
     response: Optional[str] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
 
 class PromptReturn(_BasePrompt):
     id: int
-    conversation_id: int
     created_at: datetime
 
     class Config:
@@ -54,6 +53,10 @@ class PromptCreate(_BasePrompt):
             }
         }
 
+class PromptUpdate(BaseModel):
+    content: Optional[str] = None
+    response: Optional[str] = None
+    rating: Optional[int] = Field(default=None, ge=1, le=5)
 
 class _BaseConversation(BaseModel):
     title: str
