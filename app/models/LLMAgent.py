@@ -7,43 +7,33 @@ from pandasai.pipelines.chat.generate_chat_pipeline import GenerateChatPipeline
 from pandasai import Agent
 import pandas as pd
 import os
-from app.db_models import File
+from app.db_models import Conversation
 
 class LLMAgent:
     def __init__(
         self,
-        files: List[File],
+        conversation: Conversation,
         strategy: LLMStrategy=OpenAIStrategy(),
         pipeline: Optional[Type[GenerateChatPipeline]] = None
     ):
         self._strategy = strategy
         self._pipeline = pipeline
-        self._files = files
-        self._data = None
+        self._data = [pd.DataFrame(file.data) for file in conversation.files if file.active]
         self._agent = None
 
     @classmethod
-    async def create(
+    def create(
         cls,
-        files: List[File],
+        conversation: Conversation,
         strategy: LLMStrategy = OpenAIStrategy(),
         pipeline: Optional[Type[GenerateChatPipeline]] = None
     ):
-        instance = cls(files, strategy, pipeline)
-        await instance._initialize()
+        instance = cls(conversation, strategy, pipeline)
+        instance.init_or_update_agent()
         return instance
 
-    async def _initialize(self):
-        if not self._files:
-            raise ValueError("No file has been loaded. Please provide valid files.")
-
-        await self.update_agent()
-
-    async def update_agent(self):
-        self._data = await self._strategy.preprocess_data(self._files)
-        if not self._data:
-            raise ValueError("No data has been loaded. Please update the data first.")
-
+    def init_or_update_agent(self):
+        self._data = self._strategy.security_check(self._data)
         self._agent = Agent(
             self._data,
             pipeline=self._pipeline,
@@ -54,16 +44,14 @@ class LLMAgent:
         )
 
     async def set_strategy(self, strategy: LLMStrategy):
-        if not self._files:
-            raise ValueError("No file has been loaded. Please provide valid files.")
-
         self._strategy = strategy
-        await self.update_agent()
+        self.init_or_update_agent()
 
     async def chat(self, prompt: str) -> Any:
-        if self._data is None:
-            raise ValueError("No data has been loaded. Please update the data first.")
         if self._agent is None:
             raise ValueError("No agent has been created. Please create the agent first.")
+
+        if not self._data:
+            return "No data has been loaded. Please update/select the data first."
 
         return self._agent.chat(prompt)

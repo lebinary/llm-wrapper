@@ -6,16 +6,13 @@ from app.db_models import Conversation, File
 from typing import List
 from app.schemas import ConversationCreate
 import os
-from fastapi import UploadFile
-from pathlib import Path
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.strategy_options import selectinload
 from builtins import ValueError
-
-
-UPLOAD_DIR = "uploads"
-ALLOWED_EXTENSIONS = {'.xls', '.xlsx', '.csv'}
+from app.utils import file_to_df
+from fastapi import UploadFile
+from app.services.file import save_uploaded_file
 
 
 def create_conversation(conversation: ConversationCreate, db: Session) -> Conversation:
@@ -65,33 +62,12 @@ async def add_files_to_conversation(conversation_id: int, files: List[UploadFile
         # Save file to filesystem
         file_path = await save_uploaded_file(file)
 
+
         # Save file path to db
-        db_file = File(filename=file.filename, path=file_path, conversation_id=conversation_id)
+        df = file_to_df(file_path)
+        db_file = File(filename=file.filename, path=file_path, conversation_id=conversation_id, data={"data": df.to_dict(orient='records')})
         db.add(db_file)
 
     db.commit()
     db.refresh(conversation)
     return conversation
-
-
-async def save_uploaded_file(file: UploadFile) -> str:
-    if not file.filename:
-        raise ValueError("Filename is required")
-
-    file_extension = os.path.splitext(file.filename)[1].lower()
-    if file_extension not in ALLOWED_EXTENSIONS:
-        raise ValueError(f"Invalid file type. Only {', '.join(ALLOWED_EXTENSIONS)} are allowed.")
-
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-    # Generate a file path
-    project_dir_path = Path(__file__).parent.parent.parent
-    base_path = os.path.join(project_dir_path, UPLOAD_DIR)
-    file_path = os.path.join(base_path, file.filename)
-
-    # Save the file content
-    with open(file_path, "wb") as buffer:
-        content = await file.read()
-        buffer.write(content)
-
-    return file_path

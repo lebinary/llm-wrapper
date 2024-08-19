@@ -21,8 +21,8 @@ async def get_or_create_llm_agent(conversation_id: int, db: AsyncSession) -> LLM
         if conversation_id not in llm_agent_cache:
             conversation = await get_conversation_with_files(conversation_id, db)
 
-            llm_agent = await LLMAgent.create(
-                conversation.files,
+            llm_agent = LLMAgent.create(
+                conversation,
                 strategy=OpenAIStrategy(),
                 pipeline=CustomGenerateChatPipeline
             )

@@ -57,7 +57,7 @@ async def update_existing_file(
 
         # Update agent knowledge of the new data
         llm_agent = await get_or_create_llm_agent(updated_file.conversation_id, db)
-        await llm_agent.update_agent()
+        llm_agent.init_or_update_agent()
 
         return FileReturn.from_orm(updated_file)
     except NoResultFound as e:
