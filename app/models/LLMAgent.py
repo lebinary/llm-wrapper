@@ -19,36 +19,33 @@ class LLMAgent:
         self._strategy = strategy
         self._pipeline = pipeline
         self._files = files
-        self._data: Optional[Dict[int, pd.DataFrame]] = None
+        self._data = None
         self._agent = None
 
     @classmethod
     async def create(
         cls,
-        file_paths: List[File],
+        files: List[File],
         strategy: LLMStrategy = OpenAIStrategy(),
         pipeline: Optional[Type[GenerateChatPipeline]] = None
     ):
-        instance = cls(file_paths, strategy, pipeline)
+        instance = cls(files, strategy, pipeline)
         await instance._initialize()
         return instance
 
     async def _initialize(self):
+        if not self._files:
+            raise ValueError("No file has been loaded. Please provide valid files.")
+
+        await self.update_agent()
+
+    async def update_agent(self):
         self._data = await self._strategy.preprocess_data(self._files)
-
-        if not self._data:
-            raise ValueError("No data has been loaded. Please provide valid files.")
-
-        self.update_agent()
-
-    def update_agent(self):
         if not self._data:
             raise ValueError("No data has been loaded. Please update the data first.")
 
-        active_data = pd.concat([self._data[f.id] for f in self._files if f.active], ignore_index=True)
-
         self._agent = Agent(
-            active_data,
+            self._data,
             pipeline=self._pipeline,
             config={
                 "llm": self._strategy.llm,
@@ -57,12 +54,11 @@ class LLMAgent:
         )
 
     async def set_strategy(self, strategy: LLMStrategy):
-        self._strategy = strategy
-        self._data = await self._strategy.preprocess_data(self._files)
+        if not self._files:
+            raise ValueError("No file has been loaded. Please provide valid files.")
 
-        if not self._data:
-            raise ValueError("No data has been loaded. Please provide valid files.")
-        self.update_agent()
+        self._strategy = strategy
+        await self.update_agent()
 
     async def chat(self, prompt: str) -> Any:
         if self._data is None:

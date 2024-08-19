@@ -17,12 +17,14 @@ class __BaseFile(BaseModel):
     filename: str
     path: str
     active: bool
+    data: Optional[dict] = None
     top_row: Optional[int] = None
 
 class FileUpdate(BaseModel):
     filename: Optional[str] = None
     path: Optional[str] = None
     active: Optional[bool] = None
+    data: Optional[dict] = None
     top_row: Optional[int] = None
 
 class FileReturn(__BaseFile):

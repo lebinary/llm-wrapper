@@ -39,6 +39,7 @@ class File(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     filename: Mapped[str] = mapped_column(String, index=True)
     path: Mapped[str] = mapped_column(String)
+    data: Mapped[Optional[dict]] = mapped_column(JSONB)
     top_row: Mapped[int] = mapped_column(Integer, nullable=True)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"), nullable=False)

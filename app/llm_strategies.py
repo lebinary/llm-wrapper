@@ -25,8 +25,8 @@ class OpenAIStrategy(LLMStrategy):
     def llm(self) -> OpenAI:
         return self._llm
 
-    async def preprocess_data(self, files: List[File]) -> Dict[int, pd.DataFrame]:
-        processed_data = {}
+    async def preprocess_data(self, files: List[File]) -> List[pd.DataFrame]:
+        dfs = []
         for f in files:
             if f.path.endswith('.csv'):
                 df = pd.read_csv(f.path)
@@ -35,6 +35,6 @@ class OpenAIStrategy(LLMStrategy):
             else:
                 raise ValueError(f"Unsupported file format: {f.path}")
 
-            processed_data[f.id] = df
+            dfs.append(df)
 
-        return processed_data
+        return dfs

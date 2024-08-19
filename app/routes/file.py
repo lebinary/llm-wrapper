@@ -40,19 +40,24 @@ from app.database import get_db, get_async_db
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from app.db_models import Conversation
 from sqlalchemy.future import select
-from app.services.file import get_file_by_id, update_file
+from app.services.file import async_get_file_by_id, async_update_file
+from app.services.agent import get_or_create_llm_agent
 
 router = APIRouter()
 
 @router.put("/{file_id}", response_model=FileReturn, status_code=HTTP_200_OK)
-def update_existing_file(
+async def update_existing_file(
     file_id: int,
     body: FileUpdate = Body(...),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_async_db)
 ) -> FileReturn:
     try:
-        file = get_file_by_id(file_id, db=db)
-        updated_file = update_file(file, file_data=body, db=db)
+        file = await async_get_file_by_id(file_id, db=db)
+        updated_file = await async_update_file(file, file_data=body, db=db)
+
+        # Update agent knowledge of the new data
+        llm_agent = await get_or_create_llm_agent(updated_file.conversation_id, db)
+        await llm_agent.update_agent()
 
         return FileReturn.from_orm(updated_file)
     except NoResultFound as e:

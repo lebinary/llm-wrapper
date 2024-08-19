@@ -21,7 +21,14 @@ export DATABASE_URL="postgresql://postgres:password@db:5432/postgres"
 ```
 
 ### Build docker compose images and container
-In the terminal of your root directory, run this command
+In the terminal of your root directory, run this command:
+You might need to set these env variables first before you run
+```bash
+export DOCKER_BUILDKIT=1
+export COMPOSE_DOCKER_CLI_BUILD=1
+```
+
+Now you can start the application
 ```bash
 docker-compose --env-file .env up --build
 ```

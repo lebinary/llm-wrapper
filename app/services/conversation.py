@@ -11,7 +11,7 @@ from pathlib import Path
 from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm.strategy_options import selectinload
-
+from builtins import ValueError
 
 
 UPLOAD_DIR = "uploads"

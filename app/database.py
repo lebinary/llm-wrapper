@@ -3,6 +3,8 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
 from sqlalchemy.orm import sessionmaker, DeclarativeBase
+from builtins import ValueError
+
 
 DATABASE_URL = os.environ.get("DATABASE_URL")
 if DATABASE_URL is None:

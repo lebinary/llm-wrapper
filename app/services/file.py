@@ -3,18 +3,25 @@ from app.schemas import FileUpdate
 from app.db_models import File
 from sqlalchemy.orm import Session
 from app.utils import create_update_dict
-from sqlalchemy import update
+from sqlalchemy import update, case
+from sqlalchemy.future import select
+from typing import List, Sequence
+from builtins import ValueError
 
-def get_file_by_id(file_id: int, db: Session) -> File:
-    query = db.query(File)
+async def async_get_file_by_id(file_id: int, db: AsyncSession) -> File:
+    query = select(File).filter_by(id=file_id)
+    result = await db.execute(query)
 
-    return query.filter_by(id=file_id).one()
+    return result.scalars().one()
 
-def update_file(file: File, file_data: FileUpdate, db: Session) -> File:
+async def async_update_file(file: File, file_data: FileUpdate, db: AsyncSession) -> File:
     update_data = create_update_dict(File, file_data)
 
-    db.query(File).filter(File.id == file.id).update(update_data)
-    db.commit()
-    db.refresh(file)
+    query = update(File).where(File.id == file.id).values(update_data).returning(File)
+    result = await db.execute(query)
+    updated_file = result.scalars().one()
 
-    return file
+    await db.commit()
+    await db.refresh(updated_file)
+
+    return updated_file
