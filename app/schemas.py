@@ -4,11 +4,27 @@ from pydantic import BaseModel, Field, validator
 import json
 from datetime import datetime
 
+
 class ChatBody(BaseModel):
     prompt_chat: str
 
+
 class RatingBody(BaseModel):
     rating: int
+
+
+class __BaseFile(BaseModel):
+    filename: str
+    path: str
+
+
+class FileReturn(__BaseFile):
+    id: int
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
 
 class _BasePrompt(BaseModel):
     content: str
@@ -16,12 +32,14 @@ class _BasePrompt(BaseModel):
     response: Optional[dict] = None
     rating: Optional[int] = Field(None, ge=1, le=5)
 
+
 class PromptReturn(_BasePrompt):
     id: int
     created_at: datetime
 
     class Config:
         from_attributes = True
+
 
 class PromptCreate(_BasePrompt):
     pass
@@ -33,19 +51,23 @@ class PromptCreate(_BasePrompt):
             }
         }
 
+
 class PromptUpdate(BaseModel):
     content: Optional[str] = None
     response: Optional[dict] = None
     rating: Optional[int] = Field(default=None, ge=1, le=5)
 
+
 class _BaseConversation(BaseModel):
     title: str
+
 
 class ConversationReturn(_BaseConversation):
     id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
     prompts: Optional[List[PromptReturn]] = None
+    files: Optional[List[FileReturn]] = None
 
     class Config:
         from_attributes = True

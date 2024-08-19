@@ -17,6 +17,7 @@ from app.schemas import (
     PromptCreate,
     PromptReturn,
     PromptUpdate,
+    FileReturn,
     ChatBody
 )
 from starlette.status import (
@@ -85,8 +86,12 @@ def list_conversations(db: Session = Depends(get_db)) -> List[ConversationReturn
 @router.get("/{conversation_id}", response_model=ConversationReturn, status_code=HTTP_200_OK)
 def get_conversation(conversation_id: int, db: Session = Depends(get_db)) -> ConversationReturn:
     try:
-        conversation = get_conversation_by_id(conversation_id, db, with_prompts=True)
-        return ConversationReturn(**orm_to_dict(conversation), prompts=[PromptReturn.from_orm(p) for p in conversation.prompts])
+        conversation = get_conversation_by_id(conversation_id, db, with_prompts=True, with_files=True)
+        return ConversationReturn(
+            **orm_to_dict(conversation),
+            prompts=[PromptReturn.from_orm(p) for p in conversation.prompts],
+            files=[FileReturn.from_orm(f) for f in conversation.files]
+        )
     except NoResultFound as e:
         logger.exception("Record not found while getting conversation")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND,

@@ -30,12 +30,16 @@ def create_conversation(conversation: ConversationCreate, db: Session) -> Conver
 def get_conversation_by_id(
     conversation_id: int,
     db: Session,
-    with_prompts: bool = False
+    with_prompts: bool = False,
+    with_files: bool = False
 ) -> Conversation:
     query = db.query(Conversation)
 
     if with_prompts:
         query = query.options(joinedload(Conversation.prompts))
+
+    if with_files:
+        query = query.options(joinedload(Conversation.files))
 
     return query.filter_by(id=conversation_id).one()
 
