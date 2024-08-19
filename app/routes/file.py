@@ -12,9 +12,10 @@ from app.services.conversation import (
 from app.services.agent import get_or_create_llm_agent
 from app.logger import logger
 from app.schemas import (
+    FileReturn,
     PromptUpdate,
     PromptReturn,
-    RatingBody
+    FileUpdate
 )
 from starlette.status import (
     HTTP_200_OK,
@@ -39,30 +40,30 @@ from app.database import get_db, get_async_db
 from sqlalchemy.exc import SQLAlchemyError, NoResultFound
 from app.db_models import Conversation
 from sqlalchemy.future import select
-from app.services.prompt import get_prompt_by_id, update_prompt
+from app.services.file import get_file_by_id, update_file
 
 router = APIRouter()
 
-@router.put("/{prompt_id}/rating", response_model=PromptReturn, status_code=HTTP_200_OK)
-def rate_conversation(
-    prompt_id: int,
-    body: RatingBody = Body(...),
+@router.put("/{file_id}", response_model=FileReturn, status_code=HTTP_200_OK)
+def update_existing_file(
+    file_id: int,
+    body: FileUpdate = Body(...),
     db: Session = Depends(get_db)
-) -> PromptReturn:
+) -> FileReturn:
     try:
-        prompt = get_prompt_by_id(prompt_id, db=db)
-        updated_prompt = update_prompt(prompt, prompt_data=PromptUpdate(rating=body.rating), db=db)
+        file = get_file_by_id(file_id, db=db)
+        updated_file = update_file(file, file_data=body, db=db)
 
-        return PromptReturn.from_orm(updated_prompt)
+        return FileReturn.from_orm(updated_file)
     except NoResultFound as e:
-        logger.exception("Record not found while getting conversation")
+        logger.exception("Record not found while getting file")
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Record not found")
     except SQLAlchemyError as e:
-        logger.exception("Database error occurred while rating prompt")
+        logger.exception("Database error occurred while updating file")
         raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Database error occurred")
     except Exception as e:
-        logger.exception("Error occurred while rating the conversation")
-        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while rating the conversation")\
+        logger.exception("Error occurred while updating file")
+        raise HTTPException(status_code=HTTP_500_INTERNAL_SERVER_ERROR, detail="Error occurred while updating file")\
 
 def init_app(app: FastAPI):
-    app.include_router(router, prefix="/prompts", tags=["prompts"])
+    app.include_router(router, prefix="/files", tags=["files"])

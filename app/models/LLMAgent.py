@@ -7,24 +7,25 @@ from pandasai.pipelines.chat.generate_chat_pipeline import GenerateChatPipeline
 from pandasai import Agent
 import pandas as pd
 import os
+from app.db_models import File
 
 class LLMAgent:
     def __init__(
         self,
-        file_paths: List[str],
+        files: List[File],
         strategy: LLMStrategy=OpenAIStrategy(),
         pipeline: Optional[Type[GenerateChatPipeline]] = None
     ):
         self._strategy = strategy
         self._pipeline = pipeline
-        self._file_paths = file_paths
-        self._data = None
+        self._files = files
+        self._data: Optional[Dict[int, pd.DataFrame]] = None
         self._agent = None
 
     @classmethod
     async def create(
         cls,
-        file_paths: List[str],
+        file_paths: List[File],
         strategy: LLMStrategy = OpenAIStrategy(),
         pipeline: Optional[Type[GenerateChatPipeline]] = None
     ):
@@ -33,19 +34,21 @@ class LLMAgent:
         return instance
 
     async def _initialize(self):
-        self._data = await self._strategy.preprocess_data(self._file_paths)
+        self._data = await self._strategy.preprocess_data(self._files)
 
-        if self._data.empty:
-            raise ValueError("No data has been loaded. Please provide valid file paths.")
+        if not self._data:
+            raise ValueError("No data has been loaded. Please provide valid files.")
 
-        self._update_agent()
+        self.update_agent()
 
-    def _update_agent(self):
-        if self._data is None:
+    def update_agent(self):
+        if not self._data:
             raise ValueError("No data has been loaded. Please update the data first.")
 
+        active_data = pd.concat([self._data[f.id] for f in self._files if f.active], ignore_index=True)
+
         self._agent = Agent(
-            self._data,
+            active_data,
             pipeline=self._pipeline,
             config={
                 "llm": self._strategy.llm,
@@ -55,8 +58,11 @@ class LLMAgent:
 
     async def set_strategy(self, strategy: LLMStrategy):
         self._strategy = strategy
-        self._data = await self._strategy.preprocess_data(self._file_paths)
-        self._update_agent()
+        self._data = await self._strategy.preprocess_data(self._files)
+
+        if not self._data:
+            raise ValueError("No data has been loaded. Please provide valid files.")
+        self.update_agent()
 
     async def chat(self, prompt: str) -> Any:
         if self._data is None:

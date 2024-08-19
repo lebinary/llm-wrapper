@@ -17,12 +17,12 @@ cache_lock = Lock()
 
 async def get_or_create_llm_agent(conversation_id: int, db: AsyncSession) -> LLMAgent:
     with cache_lock:
+        # There is no cached agent
         if conversation_id not in llm_agent_cache:
             conversation = await get_conversation_with_files(conversation_id, db)
 
-            file_paths: List[str] = [file.path for file in conversation.files]
             llm_agent = await LLMAgent.create(
-                file_paths,
+                conversation.files,
                 strategy=OpenAIStrategy(),
                 pipeline=CustomGenerateChatPipeline
             )

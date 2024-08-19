@@ -16,7 +16,14 @@ class RatingBody(BaseModel):
 class __BaseFile(BaseModel):
     filename: str
     path: str
+    active: bool
+    top_row: Optional[int] = None
 
+class FileUpdate(BaseModel):
+    filename: Optional[str] = None
+    path: Optional[str] = None
+    active: Optional[bool] = None
+    top_row: Optional[int] = None
 
 class FileReturn(__BaseFile):
     id: int

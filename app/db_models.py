@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Text, CheckConstraint, Boolean
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from sqlalchemy.sql import func
 from app.database import Base
@@ -39,7 +39,13 @@ class File(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     filename: Mapped[str] = mapped_column(String, index=True)
     path: Mapped[str] = mapped_column(String)
+    top_row: Mapped[int] = mapped_column(Integer, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
     conversation_id: Mapped[int] = mapped_column(ForeignKey("conversations.id"), nullable=False)
     created_at: Mapped[DateTime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     conversation: Mapped["Conversation"] = relationship("Conversation", back_populates="files")
+
+    __table_args__ = (
+        CheckConstraint('top_row >= 1', name='check_top_row'),
+    )
