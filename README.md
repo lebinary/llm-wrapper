@@ -14,7 +14,7 @@ git submodule update --init --recursive
 
 ### Required packages
 
-Install these required software to get started:\
+Install these required software to get started:
 
 *   [Python](https://www.python.org/downloads/) 3.11 or above
 *   [Poetry](https://poetry.eustace.io/docs/#installation)
