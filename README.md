@@ -6,7 +6,7 @@ git clone --recurse-submodules https://github.com/lebinary/llm-wrapper
 ```
 or
 ```bash
-
+git clone https://github.com/lebinary/llm-wrapper
 git submodule update --init --recursive
 ```
 
@@ -14,7 +14,7 @@ git submodule update --init --recursive
 
 ### Required packages
 
-Install these required software to get started:
+Install these required software to get started:\
 
 *   [Python](https://www.python.org/downloads/) 3.11 or above
 *   [Poetry](https://poetry.eustace.io/docs/#installation)
@@ -31,7 +31,7 @@ export DATABASE_URL="postgresql://postgres:password@db:5432/postgres"
 ```
 
 ### Build docker compose images and container
-In the terminal of your root directory, run this command:
+In the terminal of your root directory, run this command:\
 You might need to set these env variables first before you run
 ```bash
 export DOCKER_BUILDKIT=1
@@ -44,5 +44,5 @@ docker-compose --env-file .env up --build
 ```
 
 ### All done!
-The application is available at: [http://localhost:5173](http://localhost:5173).
+The application is available at: [http://localhost:5173](http://localhost:5173).\
 You can try out the API at: [http://localhost:8000/docs](http://localhost:8000/docs).
