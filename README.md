@@ -1,5 +1,15 @@
 # LLM Wrapper
 
+## How to clone this project
+```bash
+git clone --recurse-submodules https://github.com/lebinary/llm-wrapper
+```
+or
+```bash
+
+git submodule update --init --recursive
+```
+
 ## Getting started
 
 ### Required packages
