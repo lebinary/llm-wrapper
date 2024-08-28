@@ -62,11 +62,11 @@ async def add_files_to_conversation(conversation_id: int, files: List[UploadFile
         # Save file to filesystem
         file_path = await save_uploaded_file(file)
 
-
         # Save file path to db
         df = file_to_df(file_path)
-        db_file = File(filename=file.filename, path=file_path, conversation_id=conversation_id, data={"data": df.to_dict(orient='records')})
-        db.add(db_file)
+        if df is not None:
+            db_file = File(filename=file.filename, path=file_path, conversation_id=conversation_id, data={"df": df.to_dict(orient='records')})
+            db.add(db_file)
 
     db.commit()
     db.refresh(conversation)

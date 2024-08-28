@@ -1,5 +1,5 @@
 from app.llm_strategies import LLMStrategy
-from typing import List, Dict, Any
+from typing import cast, List, Dict, Any
 from app.custom_pipelines import CustomGenerateChatPipeline
 from app.llm_strategies import OpenAIStrategy
 from typing import Optional, Type
@@ -8,6 +8,9 @@ from pandasai import Agent
 import pandas as pd
 import os
 from app.db_models import Conversation
+from app.logger import logger
+import json
+from app.services.file import valid_file
 
 class LLMAgent:
     def __init__(
@@ -18,7 +21,7 @@ class LLMAgent:
     ):
         self._strategy = strategy
         self._pipeline = pipeline
-        self._data = [pd.DataFrame(file.data) for file in conversation.files if file.active]
+        self._data = [pd.DataFrame(cast(Dict[str, Any], file.data)["df"]) for file in conversation.files if valid_file(file)]
         self._agent = None
 
     @classmethod

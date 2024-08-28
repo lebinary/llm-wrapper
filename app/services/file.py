@@ -15,6 +15,9 @@ from fastapi import UploadFile
 UPLOAD_DIR = "uploads"
 ALLOWED_EXTENSIONS = {'.xls', '.xlsx', '.csv'}
 
+def valid_file(file: File) -> bool:
+    return file.active and file.data is not None and "df" in file.data
+
 async def async_get_file_by_id(file_id: int, db: AsyncSession) -> File:
     query = select(File).filter_by(id=file_id)
     result = await db.execute(query)

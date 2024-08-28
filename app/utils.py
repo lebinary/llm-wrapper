@@ -7,6 +7,8 @@ import pandas as pd
 from starlette.datastructures import UploadFile
 from app.db_models import File
 from builtins import ValueError
+from pandasai import SmartDataframe
+import numpy as np
 
 def orm_to_dict(orm_object):
     return {
@@ -29,10 +31,13 @@ def filename_to_conversation_title(filename: str) -> str:
 
     return title
 
-def file_to_df(file_path: str) -> pd.DataFrame:
+def file_to_df(file_path: str) -> pd.DataFrame | None:
+    df = None
     if file_path.endswith('.csv'):
-        return pd.read_csv(file_path)
+        df = pd.read_csv(file_path)
     elif file_path.endswith('.xlsx') or file_path.endswith('.xls'):
-        return pd.read_excel(file_path)
+        df = pd.read_excel(file_path)
     else:
         raise ValueError(f"Unsupported file format: {file_path}")
+
+    return df.replace(np.nan, None)

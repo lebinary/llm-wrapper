@@ -47,6 +47,7 @@ from sqlalchemy.future import select
 from app.services.prompt import async_create_prompt, async_update_prompt
 import pandas as pd
 import json
+import numpy as np
 
 router = APIRouter()
 
@@ -139,7 +140,7 @@ async def llm_chat(
         if isinstance(llm_response, str):
             json_response = {"text": llm_response}
         elif isinstance(llm_response, pd.DataFrame):
-            json_response = {"data": llm_response.to_dict(orient='records')}
+            json_response = {"data": llm_response.replace(np.nan, None).to_dict(orient='records')}
         else:
             try:
                 json_response = {"json": json.loads(json.dumps(llm_response))}
